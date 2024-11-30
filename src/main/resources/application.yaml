@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    username: yarn_store
+    password: yarn_store
+    url: jdbc:mysql://localhost:3306/yarn_store
+    
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show sql: true  
