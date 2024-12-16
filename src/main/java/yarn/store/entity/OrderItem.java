@@ -1,5 +1,8 @@
 package yarn.store.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,26 +14,23 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-
 @Entity
 @Data
-public class Price {
+public class OrderItem {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long priceId;
+	private Long orderItemId;
+	private Long orderId;
 	private Long productId;
-
-	private String priceAmount;
-	private String priceOldPrice;
-	private String priceNewPrice;
-	private String priceChangeDate;
-
+	
+	private String orderItemQuantity;
+	private String orderPriceAtPurchase;
+	
 	@ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "product_id")
+	@JoinColumn(name = "order_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Product product;
+	private Set<Order> orders = new HashSet<>();;
 
-	
 }

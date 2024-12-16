@@ -11,13 +11,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import yarn.store.controller.model.YarnStoreData;
+import yarn.store.controller.model.YarnStoreData.YarnStoreCart;
+import yarn.store.controller.model.YarnStoreData.YarnStoreCartItem;
+import yarn.store.controller.model.YarnStoreData.YarnStoreCustomer;
+import yarn.store.controller.model.YarnStoreData.YarnStoreOrder;
+import yarn.store.controller.model.YarnStoreData.YarnStoreOrderItem;
 import yarn.store.controller.model.YarnStoreData.YarnStorePrice;
 import yarn.store.controller.model.YarnStoreData.YarnStoreProduct;
+import yarn.store.controller.model.YarnStoreData.YarnStoreReview;
+import yarn.store.dao.CartDao;
+import yarn.store.dao.CustomerDao;
+import yarn.store.dao.OrderDao;
+import yarn.store.dao.OrderItemDao;
 import yarn.store.dao.PriceDao;
 import yarn.store.dao.ProductDao;
 import yarn.store.dao.YarnStoreDao;
+import yarn.store.entity.Cart;
+import yarn.store.entity.CartItem;
+import yarn.store.entity.Customer;
+import yarn.store.entity.Order;
+import yarn.store.entity.OrderItem;
 import yarn.store.entity.Price;
 import yarn.store.entity.Product;
+import yarn.store.entity.Review;
 import yarn.store.entity.YarnStore;
 
 
@@ -30,6 +46,15 @@ public class YarnStoreService {
 	private PriceDao priceDao;
 	@Autowired
 	private ProductDao productDao;
+	@Autowired
+	private OrderDao orderDao;
+	@Autowired
+	private OrderItemDao orderItemDao;
+	@Autowired
+	private CustomerDao customerDao;
+	@Autowired
+	private CartDao cartDao;
+	
 	@Transactional
 	public YarnStoreData saveYarnStore(YarnStoreData yarnStoreData) {
 		YarnStore yarnStore = findOrCreateYarnStore(yarnStoreData.getYarnStoreId());
@@ -137,12 +162,13 @@ public class YarnStoreService {
 		List<YarnStoreData> result = new LinkedList<>();
 
 		for (YarnStore yarnStore : yarnStores) {
-			YarnStoreData psd = new YarnStoreData(yarnStore);
+			YarnStoreData ysd = new YarnStoreData(yarnStore);
 
-			psd.getProducts().clear();
-			psd.getPrices().clear();
-
-			result.add(psd);
+			ysd.getProducts().clear();
+			ysd.getPrices().clear();
+			ysd.getOrders().clear();
+			
+			result.add(ysd);
 		}
 
 		return result;
@@ -153,12 +179,38 @@ public class YarnStoreService {
 		return new YarnStoreData(findYarnStoreById(yarnStoreId));
 	}
 
+	public List<YarnStoreOrder> retrieveAllYarnStoreOrders() {
+		List<Order> orders = orderDao.findAll();
+
+		List<YarnStoreOrder> result = new LinkedList<>();
+
+		for (Order order : orders) {
+			YarnStoreOrder yso = new YarnStoreOrder(order);
+			
+			yso.getOrderItems().clear();
+			
+			result.add(yso);
+		}
+		
+		return result;
+	}
+
+	public YarnStoreOrder retrieveYarnStoreOrderById(Long yarnStoreOrderId) {
+		return yarnStoreOrderId;
+	}
+
+	public List<YarnStoreProduct> retrieveAllYarnStoreProducts() {
+		
+		return null;
+	}
+
 	@Transactional(readOnly = false)
 	public void deleteYarnStoreById(Long yarnStoreId) {
 		YarnStore yarnStore = findYarnStoreById(yarnStoreId);
 		yarnStoreDao.delete(yarnStore);
 	}
-
+	
+	
 	private void copyYarnStoreFields(YarnStore yarnStore, YarnStoreData yarnStoreData) {
 		yarnStore.setYarnStoreName(yarnStoreData.getYarnStoreName());
 		yarnStore.setYarnStoreAddress(yarnStoreData.getYarnStoreAddress());
@@ -167,22 +219,117 @@ public class YarnStoreService {
 		yarnStore.setYarnStoreZip(yarnStoreData.getYarnStoreZip());
 		yarnStore.setYarnStorePhone(yarnStoreData.getYarnStorePhone());
 	}
-
-	private void copyPriceFields(Price price, YarnStorePrice yarnStorePrice) {
-		price.setPriceId(yarnStorePrice.getPriceId());
-	    price.setPriceAmount(yarnStorePrice.getPriceAmount());	
-	}
-
+	
 	private void copyProductFields(Product product, YarnStoreProduct yarnStoreProduct) {
 		product.setProductId(yarnStoreProduct.getProductId());
-		product.setProductCategory(yarnStoreProduct.getProductCategory());
-		product.setProductColor(yarnStoreProduct.getProductColor());
+		product.setYarnStoreId(yarnStoreProduct.getYarnStoreId());
+		product.setProductName(yarnStoreProduct.getProductName());
+		product.setProductDescription(yarnStoreProduct.getProductDescription());
 		product.setProductPrice(yarnStoreProduct.getProductPrice());
+		product.setProductStock(yarnStoreProduct.getProductStock());
 		
 	}
 
-	public void deleteYarnStoreByID(Long yarnStoreId) {
+	private void copyPriceFields(Price price, YarnStorePrice yarnStorePrice) {
+		price.setPriceId(yarnStorePrice.getPriceId());
+		price.setProductId(yarnStorePrice.getProductId());
+	    price.setPriceAmount(yarnStorePrice.getPriceAmount());	
+	    price.setPriceOldPrice(yarnStorePrice.getPriceOldPrice());
+	    price.setPriceNewPrice(yarnStorePrice.getPriceNewPrice());
+	    price.setPriceChangeDate(yarnStorePrice.getPriceChangeDate());
+	}
+
+	
+	
+	private void copyOrderFields(Order order, YarnStoreOrder yarnStoreOrder) {
+		order.setOrderId(yarnStoreOrder.getOrderId());
+		order.setCustomerId(yarnStoreOrder.getCustomerId());
+		order.setOrderDate(yarnStoreOrder.getOrderDate());
+		order.setOrderStatus(yarnStoreOrder.getOrderStatus());
+		
+	}
+	
+	private void copyOrderItemFields(OrderItem orderItem, YarnStoreOrderItem yarnStoreOrderItem) {
+		orderItem.setOrderItemId(yarnStoreOrderItem.getOrderItemId());
+		orderItem.setOrderId(yarnStoreOrderItem.getOrderId());
+		orderItem.setProductId(yarnStoreOrderItem.getProductId());
+		orderItem.setOrderItemQuantity(yarnStoreOrderItem.getOrderItemQuantity());
+		orderItem.setOrderPriceAtPurchase(yarnStoreOrderItem.getOrderPriceAtPurchase());
+	}
+	
+	private void copyCustomerFields(Customer customer, YarnStoreCustomer yarnStoreCustomer) {
+		customer.setCustomerId(yarnStoreCustomer.getCustomerId());
+		customer.setCustomerName(yarnStoreCustomer.getCustomerName());
+		customer.setCustomerPassword(yarnStoreCustomer.getCustomerPassword());
+		customer.setCustomerEmail(yarnStoreCustomer.getCustomerEmail());
+		customer.setCustomerRole(yarnStoreCustomer.getCustomerRole());
+	}
+	
+	private void copyCartFields(Cart cart, YarnStoreCart yarnStoreCart) {
+		cart.setCartId(yarnStoreCart.getCartId());
+		cart.setCustomerId(yarnStoreCart.getCustomerId());
+		cart.setCartCreatedAt(yarnStoreCart.getCartCreatedAt());
+		
+	}
+	
+	private void copyCartItemFields(CartItem cartItem, YarnStoreCartItem yarnStoreCartItem) {
+		cartItem.setCartId(yarnStoreCartItem.getCartItemId());
+		cartItem.setCartId(yarnStoreCartItem.getCartId());
+		cartItem.setProductId(yarnStoreCartItem.getProductId());
+		cartItem.setCartItemQuantity(yarnStoreCartItem.getCartItemQuantity());
+	}
+	
+	private void copyReviewFields(Review review, YarnStoreReview yarnStoreReview) {
+		review.setReviewId(yarnStoreReview.getReviewId());
+		review.setCustomerId(yarnStoreReview.getCustomerId());
+		review.setProductId(yarnStoreReview.getProductId());
+		review.setReviewRating(yarnStoreReview.getReviewRating());
+		review.setReviewText(yarnStoreReview.getReviewText());
+	}
+
+	public void d(Long yarnStoreId) {
 		YarnStore yarnStore = findYarnStoreById(yarnStoreId);
 		yarnStoreDao.delete(yarnStore);
 	}
+	
+	
+	public OrderDao getOrderDao() {
+		return orderDao;
+	}
+
+	public void setOrderDao(OrderDao orderDao) {
+		this.orderDao = orderDao;
+	}
+
+	public OrderItemDao getOrderItemDao() {
+		return orderItemDao;
+	}
+
+	public void setOrderItemDao(OrderItemDao orderItemDao) {
+		this.orderItemDao = orderItemDao;
+	}
+
+	public CustomerDao getCustomerDao() {
+		return customerDao;
+	}
+
+	public void setCustomerDao(CustomerDao customerDao) {
+		this.customerDao = customerDao;
+	}
+
+	public CartDao getCartDao() {
+		return cartDao;
+	}
+
+	public void setCartDao(CartDao cartDao) {
+		this.cartDao = cartDao;
+	}
+
+	
+	
+
+	
+
+	
 }
+

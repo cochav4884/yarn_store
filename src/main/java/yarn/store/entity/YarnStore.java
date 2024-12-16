@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,14 +32,26 @@ public class YarnStore {
 	private String yarnStorePhone;
 	
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "yarn_store_customer", joinColumns = @JoinColumn(name = "yarn_store_id"), inverseJoinColumns = @JoinColumn(name = "customer_id"))
+	@JoinTable(name = "yarn_store_product", joinColumns = @JoinColumn(name = "yarn_store_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	private Set<Product> products = new HashSet<>();
 
-	@OneToMany(mappedBy = "yarnStore", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "yarnStore", cascade = CascadeType.PERSIST)
+	@JoinTable(name = "yarn_store_customer", joinColumns = @JoinColumn(name = "yarn_store_id"), inverseJoinColumns = @JoinColumn(name = "customer_id"))
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Set<Price> prices = new HashSet<>();
+	private Set<Customer> customers = new HashSet<>();
 
+	@OneToMany(mappedBy = "yarnStore", cascade = CascadeType.PERSIST)
+	@JoinTable(name = "yarn_store_order", joinColumns = @JoinColumn(name = "yarn_store_id"), inverseJoinColumns = @JoinColumn(name = "order_id"))
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Set<Order> orders = new HashSet<>();
+
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinTable(name = "cart", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "cart_id"))
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Set<Cart> carts = new HashSet<>();
 }
