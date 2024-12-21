@@ -1,13 +1,18 @@
 package yarn.store.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -25,27 +30,28 @@ public class Customer {
 	private String customerEmail;
 	private String customerRole;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.PERSIST)
 	@JoinColumn(name = "yarn_store_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	private YarnStore yarnStore;
-
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "order_id")
+	
+	@OneToMany(mappedBy = "customer", cascade = CascadeType.PERSIST)
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Order order;
+	private Set<Product> products = new HashSet<>();
 	
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "cart_id")
+	@OneToOne(mappedBy = "customer", cascade = CascadeType.PERSIST)
+	@JoinTable(name = "cart", joinColumns = @JoinColumn(name = "customer_id"), inverseJoinColumns = @JoinColumn(name = "cart_id"))
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	private Cart cart;
+
+	public void deleteCustomerById(Customer customerId) {
+		
+	}
+
 	
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinColumn(name = "review_id")
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Review review;
+
 }
+

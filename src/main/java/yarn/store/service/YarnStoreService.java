@@ -11,31 +11,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import yarn.store.controller.model.YarnStoreData;
-import yarn.store.controller.model.YarnStoreData.YarnStoreCart;
-import yarn.store.controller.model.YarnStoreData.YarnStoreCartItem;
-import yarn.store.controller.model.YarnStoreData.YarnStoreCustomer;
-import yarn.store.controller.model.YarnStoreData.YarnStoreOrder;
-import yarn.store.controller.model.YarnStoreData.YarnStoreOrderItem;
-import yarn.store.controller.model.YarnStoreData.YarnStorePrice;
-import yarn.store.controller.model.YarnStoreData.YarnStoreProduct;
-import yarn.store.controller.model.YarnStoreData.YarnStoreReview;
+import yarn.store.controller.model.YarnStoreData.CartData;
+import yarn.store.controller.model.YarnStoreData.CartItemData;
+import yarn.store.controller.model.YarnStoreData.CustomerData;
+import yarn.store.controller.model.YarnStoreData.ProductData;
 import yarn.store.dao.CartDao;
+import yarn.store.dao.CartItemDao;
 import yarn.store.dao.CustomerDao;
-import yarn.store.dao.OrderDao;
-import yarn.store.dao.OrderItemDao;
-import yarn.store.dao.PriceDao;
 import yarn.store.dao.ProductDao;
 import yarn.store.dao.YarnStoreDao;
 import yarn.store.entity.Cart;
 import yarn.store.entity.CartItem;
 import yarn.store.entity.Customer;
-import yarn.store.entity.Order;
-import yarn.store.entity.OrderItem;
-import yarn.store.entity.Price;
 import yarn.store.entity.Product;
-import yarn.store.entity.Review;
 import yarn.store.entity.YarnStore;
-
 
 
 @Service
@@ -43,17 +32,13 @@ public class YarnStoreService {
 	@Autowired
 	private YarnStoreDao yarnStoreDao;
 	@Autowired
-	private PriceDao priceDao;
-	@Autowired
 	private ProductDao productDao;
-	@Autowired
-	private OrderDao orderDao;
-	@Autowired
-	private OrderItemDao orderItemDao;
 	@Autowired
 	private CustomerDao customerDao;
 	@Autowired
 	private CartDao cartDao;
+	@Autowired
+	private CartItemDao cartItemDao;
 	
 	@Transactional
 	public YarnStoreData saveYarnStore(YarnStoreData yarnStoreData) {
@@ -68,93 +53,12 @@ public class YarnStoreService {
 		} else {
 			return findYarnStoreById(yarnStoreId);
 		}
-
-		
 	}
-
-	private Price findPriceById(Long yarnStoreId, Long priceId) {
-		Price price = priceDao.findById(priceId).orElseThrow(() -> new NoSuchElementException("Price with ID=" + priceId + " was not found."));
-
-		if (price.getYarnStore().getYarnStoreId() != yarnStoreId) {
-			throw new IllegalArgumentException("The price with Id=" + priceId
-					+ " is not employed by the yarn store with ID=" + yarnStoreId + ".");
-		}
-
-		return price;
-	}
-
-	private Product findProductById(Long yarnStoreId, Long productId) {
-		Product product = productDao.findById(productId).orElseThrow(() -> new NoSuchElementException("Product with ID=" + productId + " was not found."));
-		
-		boolean found = false;
-		
-		for(YarnStore yarnStore : product.getYarnStores()) {
-			if(yarnStore.getYarnStoreId() == yarnStoreId) {
-				found = true;
-				break;
-			}
-		}
-		
-		if(!found) {
-			throw new IllegalArgumentException("The product with ID=" + productId + " is not a member of the yarn store with ID=" + yarnStoreId);
-		}
-		
-		return product;
-	}
-
-	@Transactional(readOnly = false)
-	public YarnStorePrice savePrice(Long yarnStoreId, YarnStorePrice yarnStorePrice) {
-		YarnStore yarnStore = findYarnStoreById(yarnStoreId);
-		Long priceId = yarnStorePrice.getPriceId();
-		Price price = findOrCreatePrice(yarnStoreId, priceId);
-
-		copyPriceFields(price, yarnStorePrice);
-
-		price.setYarnStore(yarnStore);
-		yarnStore.getPrices().add(price);
-
-		Price dbPrice = priceDao.save(price);
-
-		return new YarnStorePrice(dbPrice);
-	}
-
-	private Price findOrCreatePrice(Long yarnStoreId, Long priceId) {
-		if(Objects.isNull(priceId)) {
-			return new Price();
-		} else {
-			return findPriceById(yarnStoreId, priceId);
-		}
 	
-	}
-
-	@Transactional
-	public YarnStoreProduct saveProduct(Long yarnStoreId, YarnStoreProduct yarnStoreProduct) {
-		YarnStore yarnStore = findYarnStoreById(yarnStoreId);
-		Long productId = yarnStoreProduct.getProductId();
-		Product product = findOrCreateProduct(yarnStoreId, productId);
-
-		copyProductFields(product, yarnStoreProduct);
-
-		product.getYarnStores().add(yarnStore);
-		yarnStore.getProducts().add(product);
-
-		Product dbProduct = productDao.save(product);
-
-		return new YarnStoreProduct(dbProduct);
-	}
-
 	private YarnStore findYarnStoreById(Long yarnStoreId) {
 		return yarnStoreDao.findById(yarnStoreId).orElseThrow(() -> new NoSuchElementException("Yarn Store with ID=" + yarnStoreId + " was not found."));
 	}
-
-	private Product findOrCreateProduct(Long yarnStoreId, Long productId) {
-		if(Objects.isNull(productId)) {
-			return new Product();
-		} else {
-			return findProductById(yarnStoreId, productId);
-		}
-	}
-
+	
 	@Transactional(readOnly = true)
 	public List<YarnStoreData> retrieveAllYarnStores() {
 		List<YarnStore> yarnStores = yarnStoreDao.findAll();
@@ -165,43 +69,18 @@ public class YarnStoreService {
 			YarnStoreData ysd = new YarnStoreData(yarnStore);
 
 			ysd.getProducts().clear();
-			ysd.getPrices().clear();
-			ysd.getOrders().clear();
-			
+			ysd.getCustomers().clear();
+			ysd.getCarts().clear();
+			ysd.getCartItems().clear();
+						
 			result.add(ysd);
 		}
 
 		return result;
 	}
-
 	@Transactional(readOnly = true)
 	public YarnStoreData retrieveYarnStoreById(Long yarnStoreId) {
 		return new YarnStoreData(findYarnStoreById(yarnStoreId));
-	}
-
-	public List<YarnStoreOrder> retrieveAllYarnStoreOrders() {
-		List<Order> orders = orderDao.findAll();
-
-		List<YarnStoreOrder> result = new LinkedList<>();
-
-		for (Order order : orders) {
-			YarnStoreOrder yso = new YarnStoreOrder(order);
-			
-			yso.getOrderItems().clear();
-			
-			result.add(yso);
-		}
-		
-		return result;
-	}
-
-	public YarnStoreOrder retrieveYarnStoreOrderById(Long yarnStoreOrderId) {
-		return yarnStoreOrderId;
-	}
-
-	public List<YarnStoreProduct> retrieveAllYarnStoreProducts() {
-		
-		return null;
 	}
 
 	@Transactional(readOnly = false)
@@ -210,105 +89,142 @@ public class YarnStoreService {
 		yarnStoreDao.delete(yarnStore);
 	}
 	
-	
-	private void copyYarnStoreFields(YarnStore yarnStore, YarnStoreData yarnStoreData) {
-		yarnStore.setYarnStoreName(yarnStoreData.getYarnStoreName());
-		yarnStore.setYarnStoreAddress(yarnStoreData.getYarnStoreAddress());
-		yarnStore.setYarnStoreCity(yarnStoreData.getYarnStoreCity());
-		yarnStore.setYarnStoreState(yarnStoreData.getYarnStoreState());
-		yarnStore.setYarnStoreZip(yarnStoreData.getYarnStoreZip());
-		yarnStore.setYarnStorePhone(yarnStoreData.getYarnStorePhone());
-	}
-	
-	private void copyProductFields(Product product, YarnStoreProduct yarnStoreProduct) {
-		product.setProductId(yarnStoreProduct.getProductId());
-		product.setYarnStoreId(yarnStoreProduct.getYarnStoreId());
-		product.setProductName(yarnStoreProduct.getProductName());
-		product.setProductDescription(yarnStoreProduct.getProductDescription());
-		product.setProductPrice(yarnStoreProduct.getProductPrice());
-		product.setProductStock(yarnStoreProduct.getProductStock());
-		
-	}
-
-	private void copyPriceFields(Price price, YarnStorePrice yarnStorePrice) {
-		price.setPriceId(yarnStorePrice.getPriceId());
-		price.setProductId(yarnStorePrice.getProductId());
-	    price.setPriceAmount(yarnStorePrice.getPriceAmount());	
-	    price.setPriceOldPrice(yarnStorePrice.getPriceOldPrice());
-	    price.setPriceNewPrice(yarnStorePrice.getPriceNewPrice());
-	    price.setPriceChangeDate(yarnStorePrice.getPriceChangeDate());
-	}
-
-	
-	
-	private void copyOrderFields(Order order, YarnStoreOrder yarnStoreOrder) {
-		order.setOrderId(yarnStoreOrder.getOrderId());
-		order.setCustomerId(yarnStoreOrder.getCustomerId());
-		order.setOrderDate(yarnStoreOrder.getOrderDate());
-		order.setOrderStatus(yarnStoreOrder.getOrderStatus());
-		
-	}
-	
-	private void copyOrderItemFields(OrderItem orderItem, YarnStoreOrderItem yarnStoreOrderItem) {
-		orderItem.setOrderItemId(yarnStoreOrderItem.getOrderItemId());
-		orderItem.setOrderId(yarnStoreOrderItem.getOrderId());
-		orderItem.setProductId(yarnStoreOrderItem.getProductId());
-		orderItem.setOrderItemQuantity(yarnStoreOrderItem.getOrderItemQuantity());
-		orderItem.setOrderPriceAtPurchase(yarnStoreOrderItem.getOrderPriceAtPurchase());
-	}
-	
-	private void copyCustomerFields(Customer customer, YarnStoreCustomer yarnStoreCustomer) {
-		customer.setCustomerId(yarnStoreCustomer.getCustomerId());
-		customer.setCustomerName(yarnStoreCustomer.getCustomerName());
-		customer.setCustomerPassword(yarnStoreCustomer.getCustomerPassword());
-		customer.setCustomerEmail(yarnStoreCustomer.getCustomerEmail());
-		customer.setCustomerRole(yarnStoreCustomer.getCustomerRole());
-	}
-	
-	private void copyCartFields(Cart cart, YarnStoreCart yarnStoreCart) {
-		cart.setCartId(yarnStoreCart.getCartId());
-		cart.setCustomerId(yarnStoreCart.getCustomerId());
-		cart.setCartCreatedAt(yarnStoreCart.getCartCreatedAt());
-		
-	}
-	
-	private void copyCartItemFields(CartItem cartItem, YarnStoreCartItem yarnStoreCartItem) {
-		cartItem.setCartId(yarnStoreCartItem.getCartItemId());
-		cartItem.setCartId(yarnStoreCartItem.getCartId());
-		cartItem.setProductId(yarnStoreCartItem.getProductId());
-		cartItem.setCartItemQuantity(yarnStoreCartItem.getCartItemQuantity());
-	}
-	
-	private void copyReviewFields(Review review, YarnStoreReview yarnStoreReview) {
-		review.setReviewId(yarnStoreReview.getReviewId());
-		review.setCustomerId(yarnStoreReview.getCustomerId());
-		review.setProductId(yarnStoreReview.getProductId());
-		review.setReviewRating(yarnStoreReview.getReviewRating());
-		review.setReviewText(yarnStoreReview.getReviewText());
-	}
-
-	public void d(Long yarnStoreId) {
+	public void delete(Long yarnStoreId) {
 		YarnStore yarnStore = findYarnStoreById(yarnStoreId);
 		yarnStoreDao.delete(yarnStore);
 	}
 	
+	@Transactional
+	public ProductData saveProduct(Long yarnStoreId, ProductData product) {
+	    Product existingProduct = findOrCreateProduct(product.getProductId());  
+	    copyProductFields(existingProduct, product);
+		return new ProductData(productDao.save(existingProduct));  
+	   
+	}
 	
-	public OrderDao getOrderDao() {
-		return orderDao;
+	private Product findOrCreateProduct(Long productId) {
+		if (Objects.isNull(productId)) {
+	        return new Product();  
+	    } else {
+	        return findProductById(productId); 
+	    }
 	}
 
-	public void setOrderDao(OrderDao orderDao) {
-		this.orderDao = orderDao;
+	private Product findProductById(Long productId) {
+		return productDao.findById(productId).orElseThrow(() -> new NoSuchElementException("Product with ID=" + productId + " was not found."));
+	}
+	
+	@Transactional(readOnly = true)
+	public List<Product> retrieveAllProducts() {
+		List<Product> result = new LinkedList<>();
+
+		return result;
+	}
+	
+	@Transactional(readOnly = true)
+	public ProductData retrieveProductById(Long productId) {
+		return new ProductData(findProductById(productId));
 	}
 
-	public OrderItemDao getOrderItemDao() {
-		return orderItemDao;
+	@Transactional(readOnly = false)
+	public void deleteProductById(Long productId) {
+		Product product = findProductById(productId);
+		productDao.delete(product);
+	}
+	
+	@Transactional
+	public CustomerData saveCustomer(Long customerId, CustomerData customer) {
+	    Customer existingCustomer = findOrCreateCustomer(customerId);  
+	    copyCustomerFields(existingCustomer, customer);  
+	    return new CustomerData(customerDao.save(existingCustomer)); 
+	}
+	
+	private Customer findOrCreateCustomer(Long customerId) {
+		if (Objects.isNull(customerId)) {
+	        return new Customer();  
+	    } else {
+	        return findCustomerById(customerId); 
+	    }
 	}
 
-	public void setOrderItemDao(OrderItemDao orderItemDao) {
-		this.orderItemDao = orderItemDao;
+	private Customer findCustomerById(Long customerId) {
+		return customerDao.findById(customerId).orElseThrow(() -> new NoSuchElementException("Customer with ID=" + customerId + " was not found."));
+	}
+	
+	@Transactional(readOnly = true)
+	public List<CustomerData> retrieveAllCustomers() {
+		List<CustomerData> result = new LinkedList<>();
+
+		return result;
+	}
+	
+	@Transactional(readOnly = true)
+	public CustomerData retrieveCustomerById(Long customerId) {
+		return new CustomerData(findCustomerById(customerId));
+	}
+	
+	@Transactional
+	public CartData saveCart(Long cartId, CartData cart) {
+	    Cart existingCart = findOrCreateCart(cart.getCartId());  
+	    copyCartFields(existingCart, cart);  
+	    return new CartData(cartDao.save(existingCart)); 
+	}
+	
+	private Cart findOrCreateCart(Long cartId) {
+		if (Objects.isNull(cartId)) {
+	        return new Cart();  
+	    } else {
+	        return findCartById(cartId); 
+	    }
 	}
 
+	private Cart findCartById(Long cartId) {
+		return cartDao.findById(cartId).orElseThrow(() -> new NoSuchElementException("Cart with ID=" + cartId + " was not found."));
+	}
+	
+	@Transactional(readOnly = true)
+	public List<CartData> retrieveAllCarts() {
+		List<CartData> result = new LinkedList<>();
+
+		return result;
+	}
+	
+	@Transactional(readOnly = true)
+	public CartData retrieveCartById(Long cartId) {
+		return new CartData(findCartById(cartId));
+	}
+
+	@Transactional
+	public CartItemData saveCartItem(Long cartItemId, CartItemData cart) {
+	    CartItem existingCartItem = findOrCreateCartItem(cart.getCartItemId());  
+	    copyCartItemFields(existingCartItem, cart);  
+	    return new CartItemData(cartItemDao.save(existingCartItem)); 
+	}
+	
+	private CartItem findOrCreateCartItem(Long cartItemId) {
+		if (Objects.isNull(cartItemId)) {
+	        return new CartItem();  
+	    } else {
+	        return findCartItemById(cartItemId); 
+	    }
+	}
+
+	private CartItem findCartItemById(Long cartItemId) {
+		return cartItemDao.findById(cartItemId).orElseThrow(() -> new NoSuchElementException("CartItem with ID=" + cartItemId + " was not found."));
+	}
+	
+	@Transactional(readOnly = true)
+	public List<CartItemData> retrieveAllCartItems() {
+		List<CartItemData> result = new LinkedList<>();
+
+		return result;
+	}
+	
+	@Transactional(readOnly = true)
+	public CartItemData retrieveCartItemById(Long cartItemId) {
+		return new CartItemData(findCartItemById(cartItemId));
+	}
+	
 	public CustomerDao getCustomerDao() {
 		return customerDao;
 	}
@@ -324,12 +240,68 @@ public class YarnStoreService {
 	public void setCartDao(CartDao cartDao) {
 		this.cartDao = cartDao;
 	}
+	
+	public CartItemDao getCartItemDao() {
+		return cartItemDao;
+	}
+
+	public void setCartItemDao(CartItemDao cartItemDao) {
+		this.cartItemDao = cartItemDao;
+	}
+	
+	public ProductDao getProductDao() {
+		return productDao;
+	}
+
+	public void setProductDao(ProductDao productDao) {
+		this.productDao = productDao;
+	}
+
+		
+	private void copyYarnStoreFields(YarnStore yarnStore, YarnStoreData yarnStoreData) {
+		yarnStore.setYarnStoreName(yarnStoreData.getYarnStoreName());
+		yarnStore.setYarnStoreAddress(yarnStoreData.getYarnStoreAddress());
+		yarnStore.setYarnStoreCity(yarnStoreData.getYarnStoreCity());
+		yarnStore.setYarnStoreState(yarnStoreData.getYarnStoreState());
+		yarnStore.setYarnStoreZip(yarnStoreData.getYarnStoreZip());
+		yarnStore.setYarnStorePhone(yarnStoreData.getYarnStorePhone());
+	}
+	
+	private void copyProductFields(Product product, ProductData productData) {
+		product.setProductId(productData.getProductId());
+		product.setProductName(productData.getProductName());
+		product.setProductDescription(productData.getProductDescription());
+		product.setProductPrice(productData.getProductPrice());
+		product.setProductStock(productData.getProductStock());
+		
+	}
+	
+	private void copyCustomerFields(Customer customer, CustomerData customerData) {
+		customer.setCustomerId(customerData.getCustomerId());
+		customer.setCustomerName(customerData.getCustomerName());
+		customer.setCustomerPassword(customerData.getCustomerPassword());
+		customer.setCustomerEmail(customerData.getCustomerEmail());
+		customer.setCustomerRole(customerData.getCustomerRole());
+	}
+	
+	private void copyCartFields(Cart cart, CartData cartData) {
+		cart.setCartId(cart.getCartId());
+		cart.setCartCreatedAt(cart.getCartCreatedAt());
+		
+	}
+	
+	private void copyCartItemFields(CartItem cartItem, CartItemData cartItemData) {
+		cartItem.setCartItemId(cartItem.getCartItemId());
+		cartItem.setCartItemQuantity(cartItem.getCartItemQuantity());
+	}
+
+	
 
 	
 	
 
 	
-
+	
 	
 }
 

@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.Data;
@@ -23,25 +24,33 @@ public class Cart {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long cartId;
-	private Long customerId;
 	
 	private String cartCreatedAt;
 	
-	@OneToMany(cascade = CascadeType.ALL)
-	@JoinColumn(name = "customer_id")
+	@OneToMany(mappedBy = "cart", cascade = CascadeType.PERSIST)
+	@JoinTable(name = "cartItem", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "cart_item_id"))
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Set<Customer> customers = new HashSet<Customer>();
+	private Set<CartItem> cartItems = new HashSet<>();
 	
-	@OneToMany(cascade = CascadeType.ALL)
-	@JoinColumn(name = "cart_item_id")
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Set<Cart> carts = new HashSet<Cart>();
-
 	@OneToOne(mappedBy = "cart", cascade = CascadeType.PERSIST)
-	@JoinTable(name = "order", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "order_id"))
+	@JoinTable(name = "customer", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "customer_id"))
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Order order;
+	private Customer customer;
+	
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinTable(name = "yarnStore", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "yarn_store_id"))
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Set<YarnStore> yarnStores = new HashSet<>();
+
+	public void deleteCartById(Cart cartId) {
+	
+		
+	}
+
+
+
+
 }

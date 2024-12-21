@@ -9,7 +9,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -20,9 +22,7 @@ public class CartItem {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long cartItemId;
-	private Long cartId;
-	private Long productId;
+	private Long cartItemId;	
 	
 	private String cartItemQuantity;
 	
@@ -30,6 +30,25 @@ public class CartItem {
 	@JoinColumn(name = "cart_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Set<Cart> carts = new HashSet<>();
+	private Cart cart;
+
+	@OneToMany(mappedBy = "cartItem", cascade = CascadeType.PERSIST)
+	@JoinColumn(name = "product_id")
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Set<Product> products = new HashSet<>();
+	
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinTable(name = "yarnStore", joinColumns = @JoinColumn(name = "cart_item_id"), inverseJoinColumns = @JoinColumn(name = "yarn_store_id"))
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Set<YarnStore> yarnStores = new HashSet<>();
+
+	public void deleteCartItemById(CartItem cartItemId) {
+		
+		
+	}
+
+	
 
 }

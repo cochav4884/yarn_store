@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -23,31 +23,32 @@ public class Product {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long productId;
-	private Long yarnStoreId;
-	private Long reviewId;
 	
 	private String productName;
 	private String productDescription;
 	private String productPrice;
 	private String productStock;
 	
-	
-	@ManyToMany(mappedBy = "products", cascade = CascadeType.PERSIST)
-	  @EqualsAndHashCode.Exclude
-	  @ToString.Exclude
-	  private Set<Product> products = new HashSet<>();
-
-	@ManyToMany(mappedBy = "prices", cascade = CascadeType.PERSIST)
-	@JoinTable(name = "price", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "price_id"))
-	  @EqualsAndHashCode.Exclude
-	  @ToString.Exclude
-	  private Set<Price> prices = new HashSet<>();
-
-	
-	@OneToMany(mappedBy = "OrderItem", cascade = CascadeType.PERSIST)
-	@JoinTable(name = "orderItem", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "order_item_id"))
+	@ManyToMany(cascade = CascadeType.PERSIST)
+	@JoinTable(name = "product", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "yarn_store_id"))
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	private Set<OrderItem> orderitems = new HashSet<>();
+	private Set<YarnStore> yarnStores = new HashSet<>();
+	
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinTable(name = "cartItem", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "cart_item_id"))
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Set<CartItem> CartItems = new HashSet<>();
+
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinColumn(name = "customer_id")
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private Customer customer;
+
+	public void deleteProductById(Product productId) {
+		
+	}
 
 }
