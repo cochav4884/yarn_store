@@ -20,30 +20,32 @@ import lombok.ToString;
 @Entity
 @Data
 public class Cart {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long cartId;
-	
-	private String cartCreatedAt;
-	
-	@OneToMany(mappedBy = "cart", cascade = CascadeType.PERSIST)
-	@JoinTable(name = "cartItem", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "cart_item_id"))
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Set<CartItem> cartItems = new HashSet<>();
-	
-	@OneToOne(mappedBy = "cart", cascade = CascadeType.PERSIST)
-	@JoinTable(name = "customer", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "customer_id"))
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Customer customer;
-	
-	@ManyToOne(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "yarnStore", joinColumns = @JoinColumn(name = "cart_id"), inverseJoinColumns = @JoinColumn(name = "yarn_store_id"))
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Set<YarnStore> yarnStores = new HashSet<>();
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long cartId;
+
+    private String cartCreatedAt;
+
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.PERSIST)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<CartItem> cartItems = new HashSet<>();
+
+    @OneToOne(mappedBy = "cart", cascade = CascadeType.PERSIST)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Customer customer;
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinTable(
+        name = "cart_yarn_store", 
+        joinColumns = @JoinColumn(name = "cart_id"), 
+        inverseJoinColumns = @JoinColumn(name = "yarn_store_id")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private YarnStore yarnStore;
 
 	public void deleteCartById(Cart cartId) {
 	

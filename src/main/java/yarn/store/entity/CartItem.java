@@ -19,30 +19,39 @@ import lombok.ToString;
 @Entity
 @Data
 public class CartItem {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long cartItemId;	
-	
-	private String cartItemQuantity;
-	
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "cart_id")
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Cart cart;
 
-	@OneToMany(mappedBy = "cartItem", cascade = CascadeType.PERSIST)
-	@JoinColumn(name = "product_id")
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Set<Product> products = new HashSet<>();
-	
-	@ManyToOne(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "yarnStore", joinColumns = @JoinColumn(name = "cart_item_id"), inverseJoinColumns = @JoinColumn(name = "yarn_store_id"))
-	@EqualsAndHashCode.Exclude
-	@ToString.Exclude
-	private Set<YarnStore> yarnStores = new HashSet<>();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long cartItemId;
+
+    private String cartItemQuantity;
+
+    @OneToMany(cascade = CascadeType.PERSIST)
+    @JoinTable(
+        name = "cart_item_product", 
+        joinColumns = @JoinColumn(name = "cart_item_id"), 
+        inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<Product> products = new HashSet<>();
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "cart_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Cart cart;
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinTable(
+        name = "cart_item_yarn_store",
+        joinColumns = @JoinColumn(name = "cart_item_id"),
+        inverseJoinColumns = @JoinColumn(name = "yarn_store_id")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private YarnStore yarnStore;
+
 
 	public void deleteCartItemById(CartItem cartItemId) {
 		
