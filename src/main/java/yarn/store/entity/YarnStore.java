@@ -8,6 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,8 +30,12 @@ public class YarnStore {
 	private String yarnStoreZip;
 	private String yarnStorePhone;
 	
-	@OneToMany(mappedBy = "yarnStore", cascade = CascadeType.PERSIST)
+	@ManyToMany(cascade = CascadeType.PERSIST)
 	@EqualsAndHashCode.Exclude
+	@JoinTable(
+	        name = "product_yarn_store",
+	        joinColumns = @JoinColumn(name = "yarn_store_id"), 
+	        inverseJoinColumns = @JoinColumn(name = "product_id")) 
 	@ToString.Exclude
 	private Set<Product> products = new HashSet<>();
 	

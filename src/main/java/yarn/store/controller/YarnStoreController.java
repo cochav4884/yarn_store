@@ -86,7 +86,7 @@ public class YarnStoreController {
 		return yarnStoreService.saveProduct(yarnStoreId, productData);
 	}
 
-	@GetMapping
+	@GetMapping("yarn_Store/products")
 	public List<Product> retriveAllProduct() {
 		log.info("Retrieving all products");
 		return yarnStoreService.retrieveAllProducts();
@@ -124,7 +124,7 @@ public class YarnStoreController {
 		return yarnStoreService.saveCustomer(yarnStoreId, customerData);
 	}
 
-	@GetMapping
+	@GetMapping("yarn_Store/customers")
 	public List<CustomerData> retrieveAllCustomers() {
 		log.info("Retrieving all customers");
 		return yarnStoreService.retrieveAllCustomers();
@@ -161,7 +161,7 @@ public class YarnStoreController {
 		return yarnStoreService.saveCart(yarnStoreId, cartData);
 	}
 
-	@GetMapping
+	@GetMapping("yarn_Store/carts")
 	public List<CartData> retrieveAllCarts() {
 		log.info("Retrieving all carts");
 		return yarnStoreService.retrieveAllCarts();
@@ -199,7 +199,7 @@ public class YarnStoreController {
 		return yarnStoreService.saveCartItem(yarnStoreId, cartItemData);
 	}
 
-	@GetMapping
+	@GetMapping("yarn_Store/cartItems")
 	public List<CartItemData> retrieveAllCartItems() {
 		log.info("Retrieving all cartItems");
 		return yarnStoreService.retrieveAllCartItems();

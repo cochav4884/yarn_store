@@ -1,5 +1,8 @@
 package yarn.store.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,10 +31,10 @@ public class Product {
     private String productStock;
 
     
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private YarnStore yarnStore;
+    private Set<YarnStore> yarnStores = new HashSet<>();;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @EqualsAndHashCode.Exclude
